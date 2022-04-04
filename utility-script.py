@@ -62,7 +62,7 @@ def copy_model(model):
     copied_model.set_weights(model.get_weights())
     return copied_model
 
-def plot_images_with_heatmaps(images, maps, cmap, figsize, titles=None):
+def plot_images_with_heatmaps(images, maps, cmap, figsize, normalize=True, titles=None):
     n = len(images)
     fig, axs = plt.subplots(nrows=2, ncols=n, figsize=figsize)
     if normalize:
@@ -86,7 +86,7 @@ def dense_score_function(output):
 def dense_model_modifier_function(cloned_model):
     cloned_model.layers[-1].activation = tf.keras.activations.linear
 
-def plot_attentions(model, images, method, clone=True, labels=None, overlay=True, cmap="jet", figsize=(10,8), alpha=0.3, smooth=False, smooth_samples=10, smooth_noise=0.2):
+def plot_attentions(model, images, method, clone=True, labels=None, normalize=True, overlay=True, cmap="jet", figsize=(10,8), alpha=0.3, smooth=False, smooth_samples=10, smooth_noise=0.2):
     n = len(images)
     maps = []
     
@@ -109,14 +109,14 @@ def plot_attentions(model, images, method, clone=True, labels=None, overlay=True
             maps.append(vis_model(dense_score_function, image, penultimate_layer=-1)[0,:,:])
     
     if overlay:
-        fig, axs = plot_overlayed_images(images, maps, cmap, alpha, figsize, titles=labels)
+        fig, axs = plot_overlayed_images(images, maps, cmap, alpha, figsize, normalize=normalize, titles=labels)
     else:
-        fig, axs = plot_images_with_heatmaps(images, maps, cmap, figsize, titles=labels)
+        fig, axs = plot_images_with_heatmaps(images, maps, cmap, figsize, normalize=normalize, titles=labels)
     
     return fig, axs
 
 # %% [code]
-def plot_activation_maximization_conv(model, layer_name, filters_numbers, clone=True, figsize=(12, 4)):
+def plot_activation_maximization_conv(model, layer_name, filters_numbers, normalize=True, clone=True, figsize=(12, 4)):
     
     def model_modifier_function(current_model):
         target_layer = current_model.get_layer(name=layer_name)
@@ -136,6 +136,8 @@ def plot_activation_maximization_conv(model, layer_name, filters_numbers, clone=
     else:
         n = len(filters_numbers)
         seed_input = tf.random.uniform((n, *IMAGE_SHAPE), 0, 255)
+        if normalize:
+            seed_input = seed_input / 255
         activations = activation_maximization(score, seed_input=seed_input, callbacks=[Progress()])
 
     fig, axs = plt.subplots(nrows=1, ncols=n, figsize=figsize)
@@ -148,7 +150,7 @@ def plot_activation_maximization_conv(model, layer_name, filters_numbers, clone=
     plt.tight_layout()
     return fig, axs
 
-def plot_activation_maximization_dense(model, class_idx, figsize=(12, 4), clone=True):
+def plot_activation_maximization_dense(model, class_idx, figsize=(12, 4), normalize=True, clone=True):
     
     score = CategoricalScore(class_idx)
     activation_maximization = ActivationMaximization(model, model_modifier=dense_model_modifier_function, clone=clone)
@@ -160,6 +162,8 @@ def plot_activation_maximization_dense(model, class_idx, figsize=(12, 4), clone=
     else:
         n = len(class_idx)
         seed_input = tf.random.uniform((n, *IMAGE_SHAPE), 0, 255)
+        if normalize:
+            seed_input = seed_input / 255
         activations = activation_maximization(score, seed_input=seed_input, callbacks=[Progress()])
     
     
