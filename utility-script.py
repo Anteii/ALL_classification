@@ -39,20 +39,21 @@ def decode_sparse_label(label, class_names):
 def decode_sparse_labels(labels, class_names):
     return [decode_sparse_label(label, class_names) for label in labels]
 
-def plot_overlayed_images(images, maps, cmap, alpha, figsize, titles=None):
+def plot_overlayed_images(images, maps, cmap, alpha, figsize, normalize=True, titles=None):
     n = len(images)
     fig, axs = plt.subplots(ncols=n, figsize=figsize)
-    
+    if normalize:
+        images = images / 255
     if n == 1:
         if titles is not None:
             axs.set_title(titles[0])
-        axs.imshow(images[0] / 255)
+        axs.imshow(images[0])
         axs.imshow(maps[0], cmap=cmap, alpha=alpha)
     else:
         for i in range(n): 
             if titles is not None:
                 axs[i].set_title(titles[i])
-            axs[i].imshow(images[i] / 255)
+            axs[i].imshow(images[i])
             axs[i].imshow(maps[i], cmap=cmap, alpha=alpha)
     return fig, axs
 
@@ -64,16 +65,18 @@ def copy_model(model):
 def plot_images_with_heatmaps(images, maps, cmap, figsize, titles=None):
     n = len(images)
     fig, axs = plt.subplots(nrows=2, ncols=n, figsize=figsize)
+    if normalize:
+        images = images / 255
     if n == 1:
         if titles is not None:
             axs[0].set_title(titles[0])
-        axs[0].imshow(images[0] / 255)
+        axs[0].imshow(images[0])
         axs[1].imshow(maps[0], cmap=cmap)
     else:    
         for i in range(n):
             if titles is not None:
                 axs[0, i].set_title(titles[i])
-            axs[0, i].imshow(images[i] / 255)
+            axs[0, i].imshow(images[i])
             axs[1, i].imshow(maps[i], cmap=cmap)
     return fig, axs
 
